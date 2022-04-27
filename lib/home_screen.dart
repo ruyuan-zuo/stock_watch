@@ -306,6 +306,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return Fu;
   }
 
+  // here our list of fav is the Fu
+
+  void updateFavListInMem(String newEncFavList) async {
+    addStringToSF(newEncFavList); //send back to memory
+  }
+  void removeEntryFromFavList(List<SearchEntry> list, String symbol) {
+    int index =
+    list.indexWhere((element) => element.displaySymbol == symbol);
+
+    print(index);
+    print(list[index]);
+    list.removeAt(index);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -427,46 +441,98 @@ class _HomeScreenState extends State<HomeScreen> {
                               final index = i ~/ 2; /*3*/
                               print(index);
                               print(i);
-                              return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StockDetail(
-                                          entryDetail: data[index],
+                              final item = data[index];
+
+                              return Dismissible(
+                                // Each Dismissible must contain a Key. Keys allow Flutter to
+                                // uniquely identify widgets.
+                                key: Key(item.displaySymbol),
+
+                                confirmDismiss: (DismissDirection direction) async {
+                                  return await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text("Confirm"),
+                                        content: const Text("Are you sure you wish to delete this item?"),
+                                        actions: <Widget>[
+                                          TextButton(
+                                              onPressed: () => Navigator.of(context).pop(true),
+                                              child: const Text("DELETE")
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(false),
+                                            child: const Text("CANCEL"),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                // Provide a function that tells the app
+                                // what to do after an item has been swiped away.
+                                onDismissed: (direction) {
+                                  // Remove the item from the data source.
+                                  setState(() {
+                                    removeEntryFromFavList(data,item.displaySymbol ); // now the list is data, and we remove the item at the targeted symbol
+
+                                    // update in memery storey
+                                    final String encodedData = SearchEntry.encode(data);
+                                    print("line 460"+encodedData);
+                                    print("\n");
+                                    updateFavListInMem(encodedData);
+                                    // now trigger rebuild, with new Fu = new list of item in mem
+                                  });
+
+                                },
+
+                                // Show a red background as the item is swiped away.
+                                background: Container(color: Colors.red),
+                                child:  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => StockDetail(
+                                            entryDetail: data[index],
+                                          ),
+                                          // Pass the arguments as part of the RouteSettings. The
+                                          // DetailScreen reads the arguments from these settings.
+                                          // settings: RouteSettings(
+                                          //   arguments: compList[index],
+                                          // ),
                                         ),
-                                        // Pass the arguments as part of the RouteSettings. The
-                                        // DetailScreen reads the arguments from these settings.
-                                        // settings: RouteSettings(
-                                        //   arguments: compList[index],
-                                        // ),
-                                      ),
-                                    ).then((value) {
-                                      update();
-                                    });
-                                  },
-                                  child: Container(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          17, 7, 7.0, 7.0),
-                                      child: Column(children: <Widget>[
-                                        Align(
-                                          alignment: Alignment.topLeft,
-                                          child:
-                                              Text(data[index].displaySymbol),
-                                        ),
-                                        Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Text(data[index]
-                                                  .description
-                                                  .substring(0, 1) +
-                                              data[index]
-                                                  .description
-                                                  .substring(1)
-                                                  .toLowerCase()
-                                                  .split('inc')[0] +
-                                              "Inc"),
-                                        ),
-                                      ])));
+                                      ).then((value) {
+                                        update();
+                                      });
+                                    },
+                                    child: Container(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            17, 7, 7.0, 7.0),
+                                        child: Column(children: <Widget>[
+                                          Align(
+                                            alignment: Alignment.topLeft,
+                                            child:
+                                            Text(data[index].displaySymbol),
+                                          ),
+                                          Align(
+                                            alignment: Alignment.topLeft,
+                                            child: Text(data[index]
+                                                .description
+                                                .substring(0, 1) +
+                                                data[index]
+                                                    .description
+                                                    .substring(1)
+                                                    .toLowerCase()
+                                                    .split('inc')[0] +
+                                                "Inc"),
+                                          ),
+                                        ]))),
+                              );
+
+
+
+
                             }),
                       );
                     } else if (snapshot.hasError) {
@@ -625,9 +691,6 @@ class _StockDetailState extends State<StockDetail> {
 
   /* Method for load local instance of fav list
    */
-  void loadFavList(List<SearchEntry> favlists) async {
-    favlists = await getFavList();
-  }
 
   // ().then
 /* Method for get isIn
@@ -655,9 +718,20 @@ class _StockDetailState extends State<StockDetail> {
           isInFavList = value;
         }));
   }
+  void loadFavList(List<SearchEntry> favlists) async {
+    favlists = await getFavList();
+  }
 
   void updateFavListInMem(String newEncFavList) async {
     addStringToSF(newEncFavList); //send back to memory
+  }
+  void removeEntryFromFavList(String symbol) {
+    int index =
+    favList.indexWhere((element) => element.displaySymbol == symbol);
+
+    print(index);
+    print(favList[index]);
+    favList.removeAt(index);
   }
 
   // Future
@@ -695,14 +769,6 @@ class _StockDetailState extends State<StockDetail> {
     return info;
   }
 
-  void removeEntryFromFavList(String symbol) {
-    int index =
-        favList.indexWhere((element) => element.displaySymbol == symbol);
-
-    print(index);
-    print(favList[index]);
-    favList.removeAt(index);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -742,11 +808,25 @@ class _StockDetailState extends State<StockDetail> {
                               // List<SearchEntry> favlists = await getFavList();
                               favList.add(widget.entryDetail);
                               isInFavList = true;
+                              final snackBar = SnackBar(
+                                content: Text(widget.entryDetail.displaySymbol +
+                                    ' was added to watchlist'),
+                                backgroundColor: (Colors.white),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
                             } else {
                               // List<SearchEntry> favlists = await getFavList();
                               removeEntryFromFavList(
                                   widget.entryDetail.displaySymbol);
                               isInFavList = false;
+                              final snackBar = SnackBar(
+                                content: Text(widget.entryDetail.displaySymbol +
+                                    ' was removed from watchlist'),
+                                backgroundColor: (Colors.white),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
                             }
                             final String encodedData =
                                 SearchEntry.encode(favList);
@@ -763,11 +843,30 @@ class _StockDetailState extends State<StockDetail> {
                   ),
                   // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
                   //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
-                  body: Column(children: <Widget>[
-                    Text(widget.entryDetail.displaySymbol),
+                  body: Container(
+                    child: Column(children: <Widget>[
+                      // _buildStockContext(info),
 
-                    // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-                  ]),
+                      Text(widget.entryDetail.displaySymbol),
+                      // Container(
+                      //     child: Column(
+                      //   children: <Widget>[
+                      //     ListView(
+                      //       children: [
+                      //         // SizeText(info.currentPrice.toString()),
+                      //         // titleSection(info),
+                      //         Text(widget.entryDetail.description),
+                      //
+                      //         // stockPriceSection(info),
+                      //         // stockStatSection(info),
+                      //         // aboutSection(info),
+                      //       ],
+                      //     )
+                      //   ],
+                      // )),
+                      // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
+                    ]),
+                  ),
                 );
               }
             }
@@ -785,7 +884,11 @@ Widget titleSection(InforPage info) {
     child: Row(
       children: [
         Text(info.symbol),
-        Text(info.name),
+        Expanded(
+            // Expanded_A
+            child: Column(children: [
+          Expanded(child: SizedBox(height: 200.0, child: Text(info.name))),
+        ])),
       ],
     ),
   );
@@ -905,11 +1008,12 @@ Widget aboutSection(InforPage info) {
 
 // return three widgets for the list view
 Widget _buildStockContext(InforPage info) {
-  return Column(children: <Widget>[
+  return Container(
+      child: Column(children: <Widget>[
     Expanded(
       child: ListView(
         children: [
-          // Text(info.currentPrice.toString()),
+          // SizeText(info.currentPrice.toString()),
           // titleSection(info),
           // stockPriceSection(info),
           // stockStatSection(info),
@@ -917,5 +1021,5 @@ Widget _buildStockContext(InforPage info) {
         ],
       ),
     ),
-  ]);
+  ]));
 }
