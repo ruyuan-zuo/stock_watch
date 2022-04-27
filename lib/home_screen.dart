@@ -366,20 +366,13 @@ class _HomeScreenState extends State<HomeScreen> {
             future: Fu,
             builder: (context, snapshot) {
               // Checking if future is resolved or not
+
               if (snapshot.connectionState == ConnectionState.done) {
                 // If we got an error
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      '${snapshot.error} occured',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  );
+                final data = snapshot.data as List<SearchEntry>;
 
-                  // if we got our data
-                } else if (snapshot.hasData) {
+                if (snapshot.hasData) {
                   // Extracting data from snapshot object
-                  final data = snapshot.data as List<SearchEntry>;
                   return Expanded(
                     child: ListView.builder(
                         scrollDirection: Axis.vertical,
@@ -406,7 +399,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         }),
                   );
                 }
-              }
+                else if(data == null) {
+                  return Center(
+                    child: Text(" "),
+                  );
+
+                  // if we got our data
+                }
+            }
 
               // Displaying LoadingSpinner to indicate waiting state
               return Center(
