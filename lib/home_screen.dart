@@ -3,7 +3,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // import 'show_stock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -327,6 +329,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  var now = new DateTime.now();
+  var formatter = new DateFormat.MMMMd('en_US');
+
+  // final now = new DateTime.now();
+  // String formatter =  .format(now);
   @override
   Widget build(BuildContext context) {
     // var curData = InheritedDataProvider.of(context).data;
@@ -334,6 +341,8 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: Text('Stock'),
+        backgroundColor: Colors.purple,
+
         actions: [
           IconButton(
             onPressed: () {
@@ -359,8 +368,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
+        // padding: const EdgeInsets.all(16.0),
+
         children: <Widget>[
+          Column(
+            children:<Widget>[
+              Text("STOCK WATCH",textAlign: TextAlign.right),
+              Text(formatter.format(now), textAlign: TextAlign.right),
+
+
+            ],
+          ),
+
           Text("Fav Lits"),
+          Divider(),
           // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
           FutureBuilder(
             future: Fu,
@@ -369,15 +390,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
               if (snapshot.connectionState == ConnectionState.done) {
                 // If we got an error
-                final data = snapshot.data as List<SearchEntry>;
 
-                if (snapshot.hasData) {
+                if (Fu == null ) {
+                  return Center(
+                    child: Text("Empty"),
+                  );
+                  // if we got our data
+                } else if (snapshot.hasData) {
+                  final data = snapshot.data as List<SearchEntry>;
+
                   // Extracting data from snapshot object
                   return Expanded(
                     child: ListView.builder(
                         scrollDirection: Axis.vertical,
                         itemCount: data.length,
-                        itemBuilder: (context, index) {
+                        padding: const EdgeInsets.all(16.0),
+                        itemBuilder: (context, i) {
+                          if (i.isOdd) return const Divider();
+                          /*2*/
+
+                          final index = i ~/ 2; /*3*/
                           return GestureDetector(
                             onTap: () {
                               Navigator.push(
@@ -392,21 +424,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                   //   arguments: compList[index],
                                   // ),
                                 ),
-                              );
+                              ).then((value) {
+                                update();
+                              });
                             },
                             child: Text(data[index].displaySymbol),
                           );
                         }),
                   );
                 }
-                else if(data == null) {
+                else if (snapshot.hasError){
                   return Center(
-                    child: Text(" "),
+                    child: Text("Empty"),
                   );
-
-                  // if we got our data
                 }
-            }
+              }
 
               // Displaying LoadingSpinner to indicate waiting state
               return Center(
@@ -491,6 +523,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+
+  @override
   Widget build(BuildContext) {
     return Scaffold(
       appBar: AppBar(
@@ -548,6 +586,7 @@ class _StockDetailState extends State<StockDetail> {
   void loadFavList(List<SearchEntry> favlists) async {
     favlists = await getFavList();
   }
+
   // ().then
 /* Method for get isIn
  */
@@ -558,7 +597,7 @@ class _StockDetailState extends State<StockDetail> {
     for (SearchEntry e in favList) {
       if (e.displaySymbol == tar) {
         // setState(() {
-          isIn = true;
+        isIn = true;
         // });
       }
     }
@@ -571,9 +610,8 @@ class _StockDetailState extends State<StockDetail> {
     String tar = widget.entryDetail.displaySymbol;
     // loadFavList(favList);
     getIsIn(tar).then((value) => setState(() {
-      isInFavList = value;
-    }));
-
+          isInFavList = value;
+        }));
   }
 
   void updateFavListInMem(String newEncFavList) async {
@@ -612,7 +650,6 @@ class _StockDetailState extends State<StockDetail> {
     //   });
     // }
 
-
     return info;
   }
 
@@ -630,14 +667,14 @@ class _StockDetailState extends State<StockDetail> {
     return FutureBuilder(
       future: _getStockInfo(widget.entryDetail.displaySymbol),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Failed to Fetch Stock Data'),
-            );
 
-            // if we got our data
-          } else if (snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if(snapshot.data == null){
+            Center(
+              child:Text("Failed to Fetch Stock Data"),
+            );
+          }
+          if (snapshot.hasData) {
             // Extracting data from snapshot object
             final info = snapshot.data as InforPage;
             return Scaffold(
@@ -645,6 +682,8 @@ class _StockDetailState extends State<StockDetail> {
                 title: const Center(
                   child: Text('Details'),
                 ),
+                backgroundColor: Colors.purple,
+
                 leading: BackButton(
                   onPressed: () {
                     // Navigate back to the first screen by popping the current route
@@ -656,7 +695,6 @@ class _StockDetailState extends State<StockDetail> {
                   IconButton(
                     onPressed: () {
                       setState(() {
-
                         if (isInFavList == false) {
                           // List<SearchEntry> favlists = await getFavList();
                           favList.add(widget.entryDetail);

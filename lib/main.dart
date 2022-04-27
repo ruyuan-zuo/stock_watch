@@ -44,7 +44,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.purple,
+        brightness: Brightness.dark,
+        primarySwatch: Colors.purple,
+
       ),
       home: HomeScreen(),
 
