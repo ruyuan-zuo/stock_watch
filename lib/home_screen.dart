@@ -109,7 +109,8 @@ class InforPage {
   final String website;
   final String exchange;
   final double marketCap;
-   InforPage(
+
+  InforPage(
       {required this.currentPrice,
       required this.dchange,
       required this.dpercentChange,
@@ -124,8 +125,7 @@ class InforPage {
       required this.industry,
       required this.website,
       required this.exchange,
-      required this.marketCap,
-      });
+      required this.marketCap});
 }
 
 class SearchEntry {
@@ -240,17 +240,22 @@ Future<CompanyDetail> fetchCompDetail(String compSymbol) async {
 /*
 block function sto load fav list ;
  */
-late final SharedPreferences prefs;
-
-
+// late final SharedPreferences prefs;
+//
+// void loadSharedPref() async{
+//    prefs = await SharedPreferences.getInstance();
+// }
 // List<SearchEntry> favlists =[];
+
 final String asySharedKey = "stock";
 
 addStringToSF(val) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
+
   String? stringValue = prefs.getString(asySharedKey);
 
   await prefs.setString(asySharedKey, val);
+  print("updated prefs: " + val);
 }
 
 Future<String?> getStringValuesSF() async {
@@ -282,7 +287,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   // Future<List<SearchEntry>> _getSharedPref() async {
   //
   //   String? stockEntryString = await getStringValuesSF();
@@ -291,20 +295,20 @@ class _HomeScreenState extends State<HomeScreen> {
   //   return favlists;
   //
   // }
+  late Future<List<SearchEntry>> Fu;
 
-  late List<SearchEntry> favlists;
-   late Future<List<SearchEntry>> Fu;
-   Future<List<SearchEntry>> _getSharedPref() async {
-
+  Future<List<SearchEntry>> _getSharedPref() async {
     String? stockEntryString = await getStringValuesSF();
     // print(stockEntryString);
-    Fu =  decode(stockEntryString!); // updates our global favlists gives s list
+    Fu = decode(stockEntryString!); // updates our global favlists gives s list
     return Fu;
   }
+
   @override
   void initState() {
     super.initState();
     Fu = _getSharedPref(); // reset
+    // loadSharedPref();
     // _loadFav();
     // Fetch and decode data
   }
@@ -312,19 +316,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     print('didChangeDependencies');
-    update();          // OK
+    update(); // OK
     super.didChangeDependencies();
   }
 
-  void update(){
+  void update() {
     setState(() {
       Fu = _getSharedPref();
       // _loadFav();
     });
-  }
-
-  void _loadFav(){
-     getFavList().then((value) => favlists=value);
   }
 
   @override
@@ -349,7 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ).then((value) {
                 update();
-              });;
+              });
+              ;
             },
             icon: Icon(Icons.search),
           ),
@@ -380,14 +381,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Extracting data from snapshot object
                   final data = snapshot.data as List<SearchEntry>;
                   return Expanded(
-                      child: ListView.builder(
-                    itemCount: favlists.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(favlists[index].displaySymbol),
-                      );
-                    },
-                  ));
+                    child: ListView.builder(
+                        scrollDirection: Axis.vertical,
+                        itemCount: data.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => StockDetail(
+                                    entryDetail: data[index],
+                                  ),
+                                  // Pass the arguments as part of the RouteSettings. The
+                                  // DetailScreen reads the arguments from these settings.
+                                  // settings: RouteSettings(
+                                  //   arguments: compList[index],
+                                  // ),
+                                ),
+                              );
+                            },
+                            child: Text(data[index].displaySymbol),
+                          );
+                        }),
+                  );
                 }
               }
 
@@ -403,22 +420,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-Future<List<SearchEntry>> getFavList() async{
-  String? encode_str =  await getStringValuesSF();
+Future<List<SearchEntry>> getFavList() async {
+  String? encode_str = await getStringValuesSF();
   List<SearchEntry> favlists = await decode(encode_str!);
   return favlists;
 }
-
-Future<bool> getIsIn(String s ) async{
-  List<SearchEntry> favlists = await getFavList();
-  if(favlists.length==0) return false;
-  bool isIn = false;
-  for(SearchEntry e in favlists){
-    if(e.displaySymbol == s) isIn = true;
-  }
-  return isIn;
-}
-
 
 Widget _builContent(List<SearchEntry> searchEntries) {
   // CompanyDetail compD = compList[index];
@@ -530,98 +536,91 @@ class _StockDetailState extends State<StockDetail> {
   String url =
       "https://finnhub.io/api/v1/quote?symbol=symbol&token=c9guatqad3iblo2fo3e0";
 
-  late CompanyDetail compDetail;
-  late Stock stockDetail;
+  late CompanyDetail compDetail; // fetched object in future
+  late Stock stockDetail; //fetched future object i
+  late InforPage info; // load with future
 
-  late InforPage info;
+  bool isInFavList = false;
+  List<SearchEntry> favList = []; // get the list of fav lists
 
-  late List<SearchEntry> favList;
+  /* Method for load local instance of fav list
+   */
+  void loadFavList(List<SearchEntry> favlists) async {
+    favlists = await getFavList();
+  }
+  // ().then
+/* Method for get isIn
+ */
+  void getIsIn(String tar, bool isIn) async {
+    favList = await getFavList();
+
+    if (favList.length == 0) false;
+    for (SearchEntry e in favList) {
+      if (e.displaySymbol == tar) {
+        // setState(() {
+          isIn = true;
+        // });
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
- }
+    String tar = widget.entryDetail.displaySymbol;
+    // loadFavList(favList);
+    getIsIn(tar, isInFavList);
+  }
+
+  void updateFavListInMem(String newEncFavList) async {
+    addStringToSF(newEncFavList); //send back to memory
+  }
 
   // Future
   // update the view when state change
   Future<InforPage> _getStockInfo(String query) async {
     stockDetail = await fetchCompStock(query);
     compDetail = await fetchCompDetail(query);
-
     info = InforPage(
-        currentPrice: stockDetail.currentPrice,
-        dchange: stockDetail.dchange,
-        dpercentChange: stockDetail.dpercentChange,
-        highPriceOfDay: stockDetail.highPriceOfDay,
-        lowPriceOfDay: stockDetail.lowPriceOfDay,
-        openPriceOfDay: stockDetail.openPriceOfDay,
-        previousClosePrice: stockDetail.previousClosePrice,
-        t: stockDetail.t,
-        name: compDetail.name,
-        symbol: compDetail.symbol,
-        startDate: compDetail.startDate,
-        industry: compDetail.industry,
-        website: compDetail.website,
-        exchange: compDetail.exchange,
-        marketCap: compDetail.marketCap,
+      currentPrice: stockDetail.currentPrice,
+      dchange: stockDetail.dchange,
+      dpercentChange: stockDetail.dpercentChange,
+      highPriceOfDay: stockDetail.highPriceOfDay,
+      lowPriceOfDay: stockDetail.lowPriceOfDay,
+      openPriceOfDay: stockDetail.openPriceOfDay,
+      previousClosePrice: stockDetail.previousClosePrice,
+      t: stockDetail.t,
+      name: compDetail.name,
+      symbol: compDetail.symbol,
+      startDate: compDetail.startDate,
+      industry: compDetail.industry,
+      website: compDetail.website,
+      exchange: compDetail.exchange,
+      marketCap: compDetail.marketCap,
     );
+    getIsIn(widget.entryDetail.displaySymbol,isInFavList);
+    // if(isInFavList){
+    //   setState(() {
+    //     isInFavList = true;
+    //   });
+    // }
+
 
     return info;
   }
 
+  void removeEntryFromFavList(String symbol) {
+    int index =
+        favList.indexWhere((element) => element.displaySymbol == symbol);
 
+    print(index);
+    print(favList[index]);
+    favList.removeAt(index);
+  }
 
   @override
   Widget build(BuildContext context) {
-
-
-    return   Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Text('Details'),
-        ),
-        leading: BackButton(
-          onPressed: () {
-            // Navigate back to the first screen by popping the current route
-            // off the stack.
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          },
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() async {
-                if(isIn) {
-                  List<SearchEntry> favlists = await getFavList();
-                  favlists.add(widget.entryDetail);
-                  final String encodedData =
-                  SearchEntry.encode(favlists);
-                  print(encodedData);
-                  print("\n");
-                  addStringToSF(encodedData);
-                }
-                else{
-                  List<SearchEntry> favlists = await getFavList();
-
-                  favlists.remove(widget.entryDetail);
-                  final String encodedData =
-                  SearchEntry.encode(favlists);
-                  print(encodedData);
-                  print("\n");
-                  addStringToSF(encodedData);
-                }
-              });
-
-            },
-            icon : isIn ? Icon(Icons.favorite) : Icon(Icons.favorite_border),
-          ),
-        ],
-      ),
-      // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
-      //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
-      body: Column(children: <Widget>[
-
-
-      FutureBuilder(
+    return FutureBuilder(
       future: _getStockInfo(widget.entryDetail.displaySymbol),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
@@ -634,23 +633,60 @@ class _StockDetailState extends State<StockDetail> {
           } else if (snapshot.hasData) {
             // Extracting data from snapshot object
             final info = snapshot.data as InforPage;
-            return Text("Hi");
+            return Scaffold(
+              appBar: AppBar(
+                title: const Center(
+                  child: Text('Details'),
+                ),
+                leading: BackButton(
+                  onPressed: () {
+                    // Navigate back to the first screen by popping the current route
+                    // off the stack.
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                ),
+                actions: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+
+                        if (isInFavList == false) {
+                          // List<SearchEntry> favlists = await getFavList();
+                          favList.add(widget.entryDetail);
+                          isInFavList = true;
+                        } else {
+                          // List<SearchEntry> favlists = await getFavList();
+                          removeEntryFromFavList(
+                              widget.entryDetail.displaySymbol);
+                          isInFavList = false;
+                        }
+                        final String encodedData = SearchEntry.encode(favList);
+                        print(encodedData);
+                        print("\n");
+                        updateFavListInMem(encodedData);
+                      });
+                    },
+                    icon: isInFavList
+                        ? Icon(Icons.favorite)
+                        : Icon(Icons.favorite_border),
+                  ),
+                ],
+              ),
+              // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
+              //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
+              body: Column(children: <Widget>[
+                Text(widget.entryDetail.displaySymbol),
+
+                // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
+              ]),
+            );
           }
         }
         return Center(
           child: CircularProgressIndicator(),
         );
       },
-    ),
-
-        // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-      ]),
     );
-
-
-
-
-
   }
 }
 
