@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<SearchEntry>> _getSharedPref() async {
     String? stockEntryString = await getStringValuesSF();
-    // print(stockEntryString);
+    print("get=" + stockEntryString!);
     Fu = decode(stockEntryString!); // updates our global favlists gives s list
     return Fu;
   }
@@ -315,16 +315,10 @@ class _HomeScreenState extends State<HomeScreen> {
     // Fetch and decode data
   }
 
-  @override
-  void didChangeDependencies() {
-    print('didChangeDependencies');
-    update(); // OK
-    super.didChangeDependencies();
-  }
-
   void update() {
     setState(() {
       Fu = _getSharedPref();
+
       // _loadFav();
     });
   }
@@ -338,117 +332,164 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // var curData = InheritedDataProvider.of(context).data;
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text('Stock'),
-        backgroundColor: Colors.purple,
-
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SearchScreen(),
-                  // Pass the arguments as part of the RouteSettings. The
-                  // DetailScreen reads the arguments from these settings.
-                  // settings: RouteSettings(
-                  //   arguments: compList[index],
-                  // ),
-                ),
-              ).then((value) {
-                update();
-              });
-              ;
-            },
-            icon: Icon(Icons.search),
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text('Stock'),
+          backgroundColor: Colors.purple,
+          actions: [
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchScreen(),
+                    // Pass the arguments as part of the RouteSettings. The
+                    // DetailScreen reads the arguments from these settings.
+                    // settings: RouteSettings(
+                    //   arguments: compList[index],
+                    // ),
+                  ),
+                ).then((value) {
+                  update();
+                });
+                ;
+              },
+              icon: Icon(Icons.search),
+            ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.only(
+            left: 20,
+            top: 20,
+            right: 20,
+            bottom: 20,
           ),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        // padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            // padding: const EdgeInsets.all(16.0),
 
-        children: <Widget>[
-          Column(
-            children:<Widget>[
-              Text("STOCK WATCH",textAlign: TextAlign.right),
-              Text(formatter.format(now), textAlign: TextAlign.right),
+            children: <Widget>[
+              Column(
+                children: <Widget>[
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Text("STOCK WATCH",
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                  ),
+                  Align(
+                      alignment: Alignment.topRight,
+                      child: Text(formatter.format(now),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold))),
+                ],
+              ),
+              SizedBox(height: 2),
 
+              Text("Favorites", style: TextStyle(fontSize: 20)),
+              Divider(thickness: 2, color: Colors.white),
+              // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
+              FutureBuilder(
+                future: Fu,
+                builder: (context, snapshot) {
+                  // Checking if future is resolved or not
 
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    // If we got an error
+
+                    if (Fu == null) {
+                      return Center(
+                        child: Text("Empty",
+                            style: TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold)),
+                      );
+                      // if we got our data
+                    } else if (snapshot.hasData) {
+                      final data = snapshot.data as List<SearchEntry>;
+
+                      // Extracting data from snapshot object
+                      return Expanded(
+                        child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            itemCount: data.length,
+                            itemBuilder: (context, i) {
+                              if (i.isOdd)
+                                return const Divider(
+                                  thickness: 2,
+                                  color: Colors.white,
+                                );
+                              /*2*/
+
+                              final index = i ~/ 2; /*3*/
+                              print(index);
+                              print(i);
+                              return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => StockDetail(
+                                          entryDetail: data[index],
+                                        ),
+                                        // Pass the arguments as part of the RouteSettings. The
+                                        // DetailScreen reads the arguments from these settings.
+                                        // settings: RouteSettings(
+                                        //   arguments: compList[index],
+                                        // ),
+                                      ),
+                                    ).then((value) {
+                                      update();
+                                    });
+                                  },
+                                  child: Container(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          17, 7, 7.0, 7.0),
+                                      child: Column(children: <Widget>[
+                                        Align(
+                                          alignment: Alignment.topLeft,
+                                          child:
+                                              Text(data[index].displaySymbol),
+                                        ),
+                                        Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Text(data[index]
+                                                  .description
+                                                  .substring(0, 1) +
+                                              data[index]
+                                                  .description
+                                                  .substring(1)
+                                                  .toLowerCase()
+                                                  .split('inc')[0] +
+                                              "Inc"),
+                                        ),
+                                      ])));
+                            }),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Column(children: const <Widget>[
+                        SizedBox(height: 10),
+                        Center(
+                          child: Text("Empty",
+                              style: TextStyle(
+                                  fontSize: 25, fontWeight: FontWeight.bold)),
+                        ),
+                      ]);
+                    }
+                  }
+
+                  // Displaying LoadingSpinner to indicate waiting state
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              )
             ],
           ),
-
-          Text("Fav Lits"),
-          Divider(),
-          // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-          FutureBuilder(
-            future: Fu,
-            builder: (context, snapshot) {
-              // Checking if future is resolved or not
-
-              if (snapshot.connectionState == ConnectionState.done) {
-                // If we got an error
-
-                if (Fu == null ) {
-                  return Center(
-                    child: Text("Empty"),
-                  );
-                  // if we got our data
-                } else if (snapshot.hasData) {
-                  final data = snapshot.data as List<SearchEntry>;
-
-                  // Extracting data from snapshot object
-                  return Expanded(
-                    child: ListView.builder(
-                        scrollDirection: Axis.vertical,
-                        itemCount: data.length,
-                        padding: const EdgeInsets.all(16.0),
-                        itemBuilder: (context, i) {
-                          if (i.isOdd) return const Divider();
-                          /*2*/
-
-                          final index = i ~/ 2; /*3*/
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => StockDetail(
-                                    entryDetail: data[index],
-                                  ),
-                                  // Pass the arguments as part of the RouteSettings. The
-                                  // DetailScreen reads the arguments from these settings.
-                                  // settings: RouteSettings(
-                                  //   arguments: compList[index],
-                                  // ),
-                                ),
-                              ).then((value) {
-                                update();
-                              });
-                            },
-                            child: Text(data[index].displaySymbol),
-                          );
-                        }),
-                  );
-                }
-                else if (snapshot.hasError){
-                  return Center(
-                    child: Text("Empty"),
-                  );
-                }
-              }
-
-              // Displaying LoadingSpinner to indicate waiting state
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            },
-          )
-        ],
-      ),
-    );
+        ));
   }
 }
 
@@ -527,7 +568,6 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext) {
     return Scaffold(
@@ -555,7 +595,9 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
       body: searchEntries.isEmpty
-          ? Center(child: Text('No suggestions Found'))
+          ? Center(
+              child:
+                  Text('No suggestions Found!', style: TextStyle(fontSize: 22)))
           : _builContent(searchEntries),
     );
   }
@@ -664,74 +706,76 @@ class _StockDetailState extends State<StockDetail> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _getStockInfo(widget.entryDetail.displaySymbol),
-      builder: (context, snapshot) {
-
-        if (snapshot.connectionState == ConnectionState.done) {
-          if(snapshot.data == null){
-            Center(
-              child:Text("Failed to Fetch Stock Data"),
-            );
-          }
-          if (snapshot.hasData) {
-            // Extracting data from snapshot object
-            final info = snapshot.data as InforPage;
-            return Scaffold(
-              appBar: AppBar(
-                title: const Center(
-                  child: Text('Details'),
-                ),
-                backgroundColor: Colors.purple,
-
-                leading: BackButton(
-                  onPressed: () {
-                    // Navigate back to the first screen by popping the current route
-                    // off the stack.
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                ),
-                actions: [
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        if (isInFavList == false) {
-                          // List<SearchEntry> favlists = await getFavList();
-                          favList.add(widget.entryDetail);
-                          isInFavList = true;
-                        } else {
-                          // List<SearchEntry> favlists = await getFavList();
-                          removeEntryFromFavList(
-                              widget.entryDetail.displaySymbol);
-                          isInFavList = false;
-                        }
-                        final String encodedData = SearchEntry.encode(favList);
-                        print(encodedData);
-                        print("\n");
-                        updateFavListInMem(encodedData);
-                      });
-                    },
-                    icon: isInFavList
-                        ? Icon(Icons.favorite)
-                        : Icon(Icons.favorite_border),
+    return Container(
+        decoration: BoxDecoration(color: Colors.black12),
+        child: FutureBuilder(
+          future: _getStockInfo(widget.entryDetail.displaySymbol),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.data == null) {
+                Center(
+                  child: Text("Failed to Fetch Stock Data"),
+                );
+              }
+              if (snapshot.hasData) {
+                // Extracting data from snapshot object
+                final info = snapshot.data as InforPage;
+                return Scaffold(
+                  appBar: AppBar(
+                    title: const Center(
+                      child: Text('Details'),
+                    ),
+                    backgroundColor: Colors.purple,
+                    leading: BackButton(
+                      onPressed: () {
+                        // Navigate back to the first screen by popping the current route
+                        // off the stack.
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                      },
+                    ),
+                    actions: [
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            if (isInFavList == false) {
+                              // List<SearchEntry> favlists = await getFavList();
+                              favList.add(widget.entryDetail);
+                              isInFavList = true;
+                            } else {
+                              // List<SearchEntry> favlists = await getFavList();
+                              removeEntryFromFavList(
+                                  widget.entryDetail.displaySymbol);
+                              isInFavList = false;
+                            }
+                            final String encodedData =
+                                SearchEntry.encode(favList);
+                            print(encodedData);
+                            print("\n");
+                            updateFavListInMem(encodedData);
+                          });
+                        },
+                        icon: isInFavList
+                            ? Icon(Icons.favorite)
+                            : Icon(Icons.favorite_border),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
-              //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
-              body: Column(children: <Widget>[
-                Text(widget.entryDetail.displaySymbol),
+                  // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
+                  //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
+                  body: Column(children: <Widget>[
+                    Text(widget.entryDetail.displaySymbol),
 
-                // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-              ]),
+                    // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
+                  ]),
+                );
+              }
+            }
+            return Center(
+              child: CircularProgressIndicator(),
             );
-          }
-        }
-        return Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+          },
+        ));
   }
 }
 
