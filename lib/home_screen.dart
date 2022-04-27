@@ -211,9 +211,7 @@ Future<Stock?> fetchCompStock(String compSymbol) async {
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      List<dynamic> values = json.decode(response.body);
 
-      print(values.length);
       return Stock.fromJson(jsonDecode(response.body));
     } else {
       // If the server did not return a 200 OK response,
@@ -285,7 +283,12 @@ Future<String?> getStringValuesSF() async {
   //Return String
 
   print(prefs.getString(asySharedKey));
+
   String? stringValue = prefs.getString(asySharedKey);
+  if(stringValue == null){
+    throw new FormatException('thrown-error');
+
+  }
   return stringValue;
 }
 
@@ -334,7 +337,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void removeEntryFromFavList(List<SearchEntry> list, String symbol) {
     int index = list.indexWhere((element) => element.displaySymbol == symbol);
-
     print(index);
     print(list[index]);
     list.removeAt(index);
@@ -857,13 +859,7 @@ class _StockDetailState extends State<StockDetail> {
       ),
       // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
       //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
-      body: Container(
-        child: Column(children: <Widget>[
-          // _buildStockContext(info),
-
-          Container(
-              decoration: BoxDecoration(color: Colors.black12),
-              child: FutureBuilder(
+      body:  FutureBuilder(
                 future: _getStockInfo(widget.entryDetail.displaySymbol),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
@@ -905,27 +901,9 @@ class _StockDetailState extends State<StockDetail> {
                     child: CircularProgressIndicator(),
                   );
                 },
-              )),
-          // Container(
-          //     child: Column(
-          //   children: <Widget>[
-          //     ListView(
-          //       children: [
-          //         // SizeText(info.currentPrice.toString()),
-          //         // titleSection(info),
-          //         Text(widget.entryDetail.description),
-          //
-          //         // stockPriceSection(info),
-          //         // stockStatSection(info),
-          //         // aboutSection(info),
-          //       ],
-          //     )
-          //   ],
-          // )),
-          // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-        ]),
-      ),
+              ),
     );
+
   }
 }
 
