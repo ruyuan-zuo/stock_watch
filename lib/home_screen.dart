@@ -429,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Expanded(
                         child: ListView.builder(
                             scrollDirection: Axis.vertical,
-                            itemCount: data.length + 1,
+                            itemCount: data.length ,
                             itemBuilder: (context, i) {
                               // data.add(data.last); /*4*/
 
@@ -441,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //   /*2*/
                               // }
                               // final index = i ~/ 2; /*3*/
-                              final index = (i+1) ~/ 2; /*3*/
+                              final index = (i) ~/ 2; /*3*/
                               print(index);
                               print(i);
                               // print(data.length);
