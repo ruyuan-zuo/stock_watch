@@ -192,37 +192,56 @@ Future<CompeletSearch> fetchSearchList(String url_sub) async {
   }
 }
 
-Future<Stock> fetchCompStock(String compSymbol) async {
+Future<Stock?> fetchCompStock(String compSymbol) async {
   try {
     //https://finnhub.io/api/v1/quote?symbol=AAPL&token=c9guatqad3iblo2fo3e0
 
     String url = "https://finnhub.io/api/v1/quote?symbol=" +
         compSymbol +
         "&token=c9guatqad3iblo2fo3e0";
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url)).timeout(
+      const Duration(seconds: 1),
+      onTimeout: () {
+        // Time has run out, do what you wanted to do.
+        return http.Response(
+            'Error', 408); // Request Timeout response status code
+      },
+    );
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      print(response.body);
+      List<dynamic> values = json.decode(response.body);
+
+      print(values.length);
       return Stock.fromJson(jsonDecode(response.body));
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
+      return null;
       throw Exception('Failed to load');
     }
   } catch (e) {
+    print(e);
+    return null;
     throw Exception(e.toString());
   }
 }
 
-Future<CompanyDetail> fetchCompDetail(String compSymbol) async {
+Future<CompanyDetail?> fetchCompDetail(String compSymbol) async {
   try {
     //https://finnhub.io/api/v1/stock/profile2?symbol=AAPL&token=c9guatqad3iblo2fo3e0
     String url = "https://finnhub.io/api/v1/stock/profile2?symbol=" +
         compSymbol +
         "&token=c9guatqad3iblo2fo3e0";
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url)).timeout(
+      const Duration(seconds: 1),
+      onTimeout: () {
+        // Time has run out, do what you wanted to do.
+        return http.Response(
+            'Error', 408); // Request Timeout response status code
+      },
+    );
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
@@ -232,6 +251,7 @@ Future<CompanyDetail> fetchCompDetail(String compSymbol) async {
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
+      return null;
       throw Exception('Failed to load');
     }
   } catch (e) {
@@ -302,7 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<List<SearchEntry>> _getSharedPref() async {
     String? stockEntryString = await getStringValuesSF();
     print("get=" + stockEntryString!);
-    Fu = decode(stockEntryString!); // updates our global favlists gives s list
+    Fu = decode(stockEntryString); // updates our global favlists gives s list
     return Fu;
   }
 
@@ -311,9 +331,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void updateFavListInMem(String newEncFavList) async {
     addStringToSF(newEncFavList); //send back to memory
   }
+
   void removeEntryFromFavList(List<SearchEntry> list, String symbol) {
-    int index =
-    list.indexWhere((element) => element.displaySymbol == symbol);
+    int index = list.indexWhere((element) => element.displaySymbol == symbol);
 
     print(index);
     print(list[index]);
@@ -429,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Expanded(
                         child: ListView.builder(
                             scrollDirection: Axis.vertical,
-                            itemCount: data.length ,
+                            itemCount: data.length,
                             itemBuilder: (context, i) {
                               // data.add(data.last); /*4*/
 
@@ -441,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //   /*2*/
                               // }
                               // final index = i ~/ 2; /*3*/
-                              final index = i ; /*3*/
+                              final index = i; /*3*/
                               print(index);
                               print(i);
                               // print(data.length);
@@ -453,20 +473,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                 // uniquely identify widgets.
                                 key: Key(item.displaySymbol),
 
-                                confirmDismiss: (DismissDirection direction) async {
+                                confirmDismiss:
+                                    (DismissDirection direction) async {
                                   return await showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
                                         title: const Text("Delete Confirm"),
-                                        content: const Text("Are you sure you want to delete this item?"),
+                                        content: const Text(
+                                            "Are you sure you want to delete this item?"),
                                         actions: <Widget>[
                                           TextButton(
-                                              onPressed: () => Navigator.of(context).pop(true),
-                                              child: const Text("Delete")
-                                          ),
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: const Text("Delete")),
                                           TextButton(
-                                            onPressed: () => Navigator.of(context).pop(false),
+                                            onPressed: () =>
+                                                Navigator.of(context)
+                                                    .pop(false),
                                             child: const Text("Cancel"),
                                           ),
                                         ],
@@ -479,21 +504,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onDismissed: (direction) {
                                   // Remove the item from the data source.
                                   setState(() {
-                                    removeEntryFromFavList(data,item.displaySymbol ); // now the list is data, and we remove the item at the targeted symbol
+                                    removeEntryFromFavList(data,
+                                        item.displaySymbol); // now the list is data, and we remove the item at the targeted symbol
 
                                     // update in memery storey
-                                    final String encodedData = SearchEntry.encode(data);
-                                    print("line 460"+encodedData);
+                                    final String encodedData =
+                                        SearchEntry.encode(data);
+                                    print("line 460" + encodedData);
                                     print("\n");
                                     updateFavListInMem(encodedData);
                                     // now trigger rebuild, with new Fu = new list of item in mem
                                   });
-
                                 },
 
                                 // Show a red background as the item is swiped away.
                                 background: Container(color: Colors.red),
-                                child:  GestureDetector(
+                                child: GestureDetector(
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -518,13 +544,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                           Align(
                                             alignment: Alignment.topLeft,
                                             child:
-                                            Text(data[index].displaySymbol),
+                                                Text(data[index].displaySymbol),
                                           ),
                                           Align(
                                             alignment: Alignment.topLeft,
                                             child: Text(data[index]
-                                                .description
-                                                .substring(0, 1) +
+                                                    .description
+                                                    .substring(0, 1) +
                                                 data[index]
                                                     .description
                                                     .substring(1)
@@ -534,10 +560,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ]))),
                               );
-
-
-
-
                             }),
                       );
                     } else if (snapshot.hasError) {
@@ -723,6 +745,7 @@ class _StockDetailState extends State<StockDetail> {
           isInFavList = value;
         }));
   }
+
   void loadFavList(List<SearchEntry> favlists) async {
     favlists = await getFavList();
   }
@@ -730,9 +753,10 @@ class _StockDetailState extends State<StockDetail> {
   void updateFavListInMem(String newEncFavList) async {
     addStringToSF(newEncFavList); //send back to memory
   }
+
   void removeEntryFromFavList(String symbol) {
     int index =
-    favList.indexWhere((element) => element.displaySymbol == symbol);
+        favList.indexWhere((element) => element.displaySymbol == symbol);
 
     print(index);
     print(favList[index]);
@@ -741,29 +765,34 @@ class _StockDetailState extends State<StockDetail> {
 
   // Future
   // update the view when state change
-  Future<InforPage> _getStockInfo(String query) async {
+  Future<InforPage?> _getStockInfo(String query) async {
     // getIsIn(widget.entryDetail.displaySymbol).then((value) => setState(() {
     //   isInFavList = value;
     // }));
 
-    stockDetail = await fetchCompStock(query);
-    compDetail = await fetchCompDetail(query);
+    Stock? temp_stock = await fetchCompStock(query);
+    CompanyDetail? temp_comp = await fetchCompDetail(query);
+    if (temp_stock == null || temp_comp == null) {
+      throw new FormatException('thrown-error');
+    }
+    // temp_stock = stockDetail;
+
     info = InforPage(
-      currentPrice: stockDetail.currentPrice,
-      dchange: stockDetail.dchange,
-      dpercentChange: stockDetail.dpercentChange,
-      highPriceOfDay: stockDetail.highPriceOfDay,
-      lowPriceOfDay: stockDetail.lowPriceOfDay,
-      openPriceOfDay: stockDetail.openPriceOfDay,
-      previousClosePrice: stockDetail.previousClosePrice,
-      t: stockDetail.t,
-      name: compDetail.name,
-      symbol: compDetail.symbol,
-      startDate: compDetail.startDate,
-      industry: compDetail.industry,
-      website: compDetail.website,
-      exchange: compDetail.exchange,
-      marketCap: compDetail.marketCap,
+      currentPrice: temp_stock.currentPrice,
+      dchange: temp_stock.dchange,
+      dpercentChange: temp_stock.dpercentChange,
+      highPriceOfDay: temp_stock.highPriceOfDay,
+      lowPriceOfDay: temp_stock.lowPriceOfDay,
+      openPriceOfDay: temp_stock.openPriceOfDay,
+      previousClosePrice: temp_stock.previousClosePrice,
+      t: temp_stock.t,
+      name: temp_comp.name,
+      symbol: temp_comp.symbol,
+      startDate: temp_comp.startDate,
+      industry: temp_comp.industry,
+      website: temp_comp.website,
+      exchange: temp_comp.exchange,
+      marketCap: temp_comp.marketCap,
     );
     // if(isInFavList){
     //   setState(() {
@@ -774,112 +803,129 @@ class _StockDetailState extends State<StockDetail> {
     return info;
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-        decoration: BoxDecoration(color: Colors.black12),
-        child: FutureBuilder(
-          future: _getStockInfo(widget.entryDetail.displaySymbol),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.data == null) {
-                Center(
-                  child: Text("Failed to Fetch Stock Data"),
-                );
-              }
-              if (snapshot.hasData) {
-                // Extracting data from snapshot object
-                final info = snapshot.data as InforPage;
-                return Scaffold(
-                  appBar: AppBar(
-                    title: const Center(
-                      child: Text('Details'),
-                    ),
-                    backgroundColor: Colors.purple,
-                    leading: BackButton(
-                      onPressed: () {
-                        // Navigate back to the first screen by popping the current route
-                        // off the stack.
-                        Navigator.of(context)
-                            .popUntil((route) => route.isFirst);
-                      },
-                    ),
-                    actions: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            if (isInFavList == false) {
-                              // List<SearchEntry> favlists = await getFavList();
-                              favList.add(widget.entryDetail);
-                              isInFavList = true;
-                              final snackBar = SnackBar(
-                                content: Text(widget.entryDetail.displaySymbol +
-                                    ' was added to watchlist'),
-                                backgroundColor: (Colors.white),
-                              );
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar);
-                            } else {
-                              // List<SearchEntry> favlists = await getFavList();
-                              removeEntryFromFavList(
-                                  widget.entryDetail.displaySymbol);
-                              isInFavList = false;
-                              final snackBar = SnackBar(
-                                content: Text(widget.entryDetail.displaySymbol +
-                                    ' was removed from watchlist'),
-                                backgroundColor: (Colors.white),
-                              );
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar);
-                            }
-                            final String encodedData =
-                                SearchEntry.encode(favList);
-                            print(encodedData);
-                            print("\n");
-                            updateFavListInMem(encodedData);
-                          });
-                        },
-                        icon: isInFavList
-                            ? Icon(Icons.favorite)
-                            : Icon(Icons.favorite_border),
-                      ),
-                    ],
-                  ),
-                  // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
-                  //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
-                  body: Container(
-                    child: Column(children: <Widget>[
-                      // _buildStockContext(info),
-
-                      Text(widget.entryDetail.displaySymbol),
-                      // Container(
-                      //     child: Column(
-                      //   children: <Widget>[
-                      //     ListView(
-                      //       children: [
-                      //         // SizeText(info.currentPrice.toString()),
-                      //         // titleSection(info),
-                      //         Text(widget.entryDetail.description),
-                      //
-                      //         // stockPriceSection(info),
-                      //         // stockStatSection(info),
-                      //         // aboutSection(info),
-                      //       ],
-                      //     )
-                      //   ],
-                      // )),
-                      // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-                    ]),
-                  ),
-                );
-              }
-            }
-            return Center(
-              child: CircularProgressIndicator(),
-            );
+    return Scaffold(
+      appBar: AppBar(
+        title: const Center(
+          child: Text('Details'),
+        ),
+        backgroundColor: Colors.purple,
+        leading: BackButton(
+          onPressed: () {
+            // Navigate back to the first screen by popping the current route
+            // off the stack.
+            Navigator.of(context).popUntil((route) => route.isFirst);
           },
-        ));
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                if (isInFavList == false) {
+                  // List<SearchEntry> favlists = await getFavList();
+                  favList.add(widget.entryDetail);
+                  isInFavList = true;
+                  final snackBar = SnackBar(
+                    content: Text(widget.entryDetail.displaySymbol +
+                        ' was added to watchlist'),
+                    backgroundColor: (Colors.white),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                } else {
+                  // List<SearchEntry> favlists = await getFavList();
+                  removeEntryFromFavList(widget.entryDetail.displaySymbol);
+                  isInFavList = false;
+                  final snackBar = SnackBar(
+                    content: Text(widget.entryDetail.displaySymbol +
+                        ' was removed from watchlist'),
+                    backgroundColor: (Colors.white),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }
+                final String encodedData = SearchEntry.encode(favList);
+                print(encodedData);
+                print("\n");
+                updateFavListInMem(encodedData);
+              });
+            },
+            icon: isInFavList
+                ? Icon(Icons.favorite)
+                : Icon(Icons.favorite_border),
+          ),
+        ],
+      ),
+      // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
+      //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
+      body: Container(
+        child: Column(children: <Widget>[
+          // _buildStockContext(info),
+
+          Container(
+              decoration: BoxDecoration(color: Colors.black12),
+              child: FutureBuilder(
+                future: _getStockInfo(widget.entryDetail.displaySymbol),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.data == null) {
+                      return Center(
+                        child: Text("Failed to Fetch Stock Data"),
+                      );
+                    }
+                    if (snapshot.hasData) {
+                      // Extracting data from snapshot object
+                      final info = snapshot.data as InforPage;
+                      return Container(
+                        child: Column(children: <Widget>[
+                          // _buildStockContext(info),
+
+                          Text(widget.entryDetail.displaySymbol),
+                          // Container(
+                          //     child: Column(
+                          //   children: <Widget>[
+                          //     ListView(
+                          //       children: [
+                          //         // SizeText(info.currentPrice.toString()),
+                          //         // titleSection(info),
+                          //         Text(widget.entryDetail.description),
+                          //
+                          //         // stockPriceSection(info),
+                          //         // stockStatSection(info),
+                          //         // aboutSection(info),
+                          //       ],
+                          //     )
+                          //   ],
+                          // )),
+                          // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
+                        ]),
+                      );
+                    }
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              )),
+          // Container(
+          //     child: Column(
+          //   children: <Widget>[
+          //     ListView(
+          //       children: [
+          //         // SizeText(info.currentPrice.toString()),
+          //         // titleSection(info),
+          //         Text(widget.entryDetail.description),
+          //
+          //         // stockPriceSection(info),
+          //         // stockStatSection(info),
+          //         // aboutSection(info),
+          //       ],
+          //     )
+          //   ],
+          // )),
+          // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
+        ]),
+      ),
+    );
   }
 }
 
