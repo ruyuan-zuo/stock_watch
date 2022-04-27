@@ -429,18 +429,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Expanded(
                         child: ListView.builder(
                             scrollDirection: Axis.vertical,
-                            itemCount: data.length,
+                            itemCount: data.length + 1,
                             itemBuilder: (context, i) {
-                              if (i.isOdd)
-                                return const Divider(
-                                  thickness: 2,
-                                  color: Colors.white,
-                                );
-                              /*2*/
+                              // data.add(data.last); /*4*/
 
-                              final index = i ~/ 2; /*3*/
+                              // if (i.isOdd) {
+                              //   return const Divider(
+                              //     thickness: 2,
+                              //     color: Colors.white,
+                              //   );
+                              //   /*2*/
+                              // }
+                              // final index = i ~/ 2; /*3*/
+                              final index = (i+1) ~/ 2; /*3*/
                               print(index);
                               print(i);
+                              // print(data.length);
+
                               final item = data[index];
 
                               return Dismissible(
@@ -453,16 +458,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
-                                        title: const Text("Confirm"),
-                                        content: const Text("Are you sure you wish to delete this item?"),
+                                        title: const Text("Delete Confirm"),
+                                        content: const Text("Are you sure you want to delete this item?"),
                                         actions: <Widget>[
                                           TextButton(
                                               onPressed: () => Navigator.of(context).pop(true),
-                                              child: const Text("DELETE")
+                                              child: const Text("Delete")
                                           ),
                                           TextButton(
                                             onPressed: () => Navigator.of(context).pop(false),
-                                            child: const Text("CANCEL"),
+                                            child: const Text("Cancel"),
                                           ),
                                         ],
                                       );
