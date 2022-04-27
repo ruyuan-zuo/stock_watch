@@ -551,9 +551,9 @@ class _StockDetailState extends State<StockDetail> {
   // ().then
 /* Method for get isIn
  */
-  void getIsIn(String tar, bool isIn) async {
+  Future<bool> getIsIn(String tar) async {
     favList = await getFavList();
-
+    bool isIn = false;
     if (favList.length == 0) false;
     for (SearchEntry e in favList) {
       if (e.displaySymbol == tar) {
@@ -562,6 +562,7 @@ class _StockDetailState extends State<StockDetail> {
         // });
       }
     }
+    return isIn;
   }
 
   @override
@@ -569,7 +570,10 @@ class _StockDetailState extends State<StockDetail> {
     super.initState();
     String tar = widget.entryDetail.displaySymbol;
     // loadFavList(favList);
-    getIsIn(tar, isInFavList);
+    getIsIn(tar).then((value) => setState(() {
+      isInFavList = value;
+    }));
+
   }
 
   void updateFavListInMem(String newEncFavList) async {
@@ -579,6 +583,10 @@ class _StockDetailState extends State<StockDetail> {
   // Future
   // update the view when state change
   Future<InforPage> _getStockInfo(String query) async {
+    // getIsIn(widget.entryDetail.displaySymbol).then((value) => setState(() {
+    //   isInFavList = value;
+    // }));
+
     stockDetail = await fetchCompStock(query);
     compDetail = await fetchCompDetail(query);
     info = InforPage(
@@ -598,7 +606,6 @@ class _StockDetailState extends State<StockDetail> {
       exchange: compDetail.exchange,
       marketCap: compDetail.marketCap,
     );
-    getIsIn(widget.entryDetail.displaySymbol,isInFavList);
     // if(isInFavList){
     //   setState(() {
     //     isInFavList = true;
