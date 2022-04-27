@@ -441,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //   /*2*/
                               // }
                               // final index = i ~/ 2; /*3*/
-                              final index = (i) ~/ 2; /*3*/
+                              final index = i ; /*3*/
                               print(index);
                               print(i);
                               // print(data.length);
