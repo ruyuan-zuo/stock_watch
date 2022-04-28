@@ -489,6 +489,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 // Each Dismissible must contain a Key. Keys allow Flutter to
                                 // uniquely identify widgets.
                                 key: Key(item.displaySymbol),
+                                background: Container(
+                                  color: Colors.red,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(15),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(Icons.delete, color: Colors.white),
+                                      ],
+                                    ),
+                                  ),
+                                ),
 
                                 confirmDismiss:
                                     (DismissDirection direction) async {
@@ -535,7 +547,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
 
                                 // Show a red background as the item is swiped away.
-                                background: Container(color: Colors.red),
                                 child: GestureDetector(
                                     onTap: () {
                                       Navigator.push(
@@ -866,8 +877,8 @@ class _StockDetailState extends State<StockDetail> {
               });
             },
             icon: isInFavList
-                ? Icon(Icons.favorite)
-                : Icon(Icons.favorite_border),
+                ? Icon(Icons.star)
+                : Icon(Icons.star_border),
           ),
         ],
       ),
