@@ -945,15 +945,19 @@ class _StockDetailState extends State<StockDetail> {
                           ),
                           Column(
                             children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
+                          Table(
+
+                          // textDirection: TextDirection.rtl,
+                          // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
+                          // border:TableBorder.all(width: 2.0,color: Colors.red),
+                          children: [
+          TableRow(
+          children: [
                                   Container(
                                     child: const Align(
                                       alignment: Alignment.center,
-                                      child: Text("Open",
+                                      child: Text("Open",                                          textAlign: TextAlign.center,
+
                                           style: const TextStyle(fontSize: 20)),
                                     ),
                                   ),
@@ -962,13 +966,17 @@ class _StockDetailState extends State<StockDetail> {
                                           alignment: Alignment.center,
                                           child: Text(
                                               info.openPriceOfDay.toString(),
+                                              textAlign: TextAlign.center,
+
                                               style: const TextStyle(
                                                   color: Colors.grey,
-                                                  fontSize: 20)))),
+                                                  fontSize: 18)))),
                                   Container(
                                     child: const Align(
                                         alignment: Alignment.center,
                                         child: Text("High",
+                                            textAlign: TextAlign.center,
+
                                             style:
                                                 const TextStyle(fontSize: 20))),
                                   ),
@@ -977,21 +985,26 @@ class _StockDetailState extends State<StockDetail> {
                                           alignment: Alignment.center,
                                           child: Text(
                                             info.highPriceOfDay.toString(),
+                                            textAlign: TextAlign.center,
+
                                             style: TextStyle(
                                                 color: Colors.grey,
-                                                fontSize: 20),
+                                                fontSize: 18),
                                           ))),
-                                ],
+                                ],)]
                               ),
                             ],
                           ),
                           Column(
                             children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
+          Table(
+
+          // textDirection: TextDirection.rtl,
+          // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
+          // border:TableBorder.all(width: 2.0,color: Colors.red),
+          children: [
+          TableRow(
+          children: [
                                   Container(
                                       child: Align(
                                     alignment: Alignment.center,
@@ -1009,7 +1022,7 @@ class _StockDetailState extends State<StockDetail> {
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                                 color: Colors.grey,
-                                                fontSize: 20))),
+                                                fontSize: 18))),
                                   ),
                                   Container(
                                     child: Align(
@@ -1028,10 +1041,10 @@ class _StockDetailState extends State<StockDetail> {
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                               color: Colors.grey,
-                                              fontSize: 20)),
+                                              fontSize: 18)),
                                     ),
                                   ),
-                                ],
+                                ],)]
                               ),
                             ],
                           ),
