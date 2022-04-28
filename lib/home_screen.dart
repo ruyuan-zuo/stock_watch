@@ -9,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 // import 'show_stock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CompanyDetail {
   //https://finnhub.io/api/v1/stock/profile2?symbol=AAPL&token=c9guatqad3iblo2fo3e0
@@ -37,16 +38,31 @@ class CompanyDetail {
 
   factory CompanyDetail.fromJson(Map<String, dynamic> json) {
     return CompanyDetail(
-      name: json["name"],
-      symbol: json["ticker"],
-      startDate: json["ipo"],
-      industry: json["finnhubIndustry"],
-      website: json["weburl"],
-      exchange: json["exchange"],
-      marketCap: json["marketCapitalization"],
+      name: json["name"] as String,
+      symbol: json["ticker"] as String,
+      startDate: json["ipo"] as String,
+      industry: json["finnhubIndustry"] as String,
+      website: json["weburl"] as String,
+      exchange: json["exchange"] as String,
+      marketCap: checkDouble(json["marketCapitalization"] ),
     );
   }
 }
+
+double checkDouble(dynamic value) {
+  if (value is String) {
+    return double.parse(value);
+  } else {
+    return value.toDouble();
+  }
+}
+
+int checkInt(dynamic value) {
+  if(value is int) return value;
+  else if(value is double) return value.toInt();
+  else{ return int.parse(value);}
+}
+
 
 class Stock {
   //https://finnhub.io/api/v1/quote?symbol=symbol&token=c9guatqad3iblo2fo3e0
@@ -82,14 +98,14 @@ class Stock {
 
   factory Stock.fromJson(Map<String, dynamic> json) {
     return Stock(
-      currentPrice: json["c"],
-      dchange: json["d"],
-      dpercentChange: json["dp"],
-      highPriceOfDay: json["h"],
-      lowPriceOfDay: json["l"],
-      openPriceOfDay: json["o"],
-      previousClosePrice: json["pc"],
-      t: json["t"],
+      currentPrice: checkDouble(json["c"] ),
+      dchange: checkDouble(json["d"]),
+      dpercentChange: checkDouble(json["dp"] ),
+      highPriceOfDay: checkDouble(json["h"] ),
+      lowPriceOfDay: checkDouble(json["l"] ),
+      openPriceOfDay: checkDouble(json["o"] ),
+      previousClosePrice: checkDouble(json["pc"] ),
+      t: checkInt(json["t"]),
     );
   }
 }
@@ -200,7 +216,7 @@ Future<Stock?> fetchCompStock(String compSymbol) async {
         compSymbol +
         "&token=c9guatqad3iblo2fo3e0";
     final response = await http.get(Uri.parse(url)).timeout(
-      const Duration(seconds: 1),
+      const Duration(seconds: 20),
       onTimeout: () {
         // Time has run out, do what you wanted to do.
         return http.Response(
@@ -233,7 +249,7 @@ Future<CompanyDetail?> fetchCompDetail(String compSymbol) async {
         compSymbol +
         "&token=c9guatqad3iblo2fo3e0";
     final response = await http.get(Uri.parse(url)).timeout(
-      const Duration(seconds: 1),
+      const Duration(seconds: 20),
       onTimeout: () {
         // Time has run out, do what you wanted to do.
         return http.Response(
@@ -285,9 +301,8 @@ Future<String?> getStringValuesSF() async {
   print(prefs.getString(asySharedKey));
 
   String? stringValue = prefs.getString(asySharedKey);
-  if(stringValue == null){
+  if (stringValue == null) {
     throw new FormatException('thrown-error');
-
   }
   return stringValue;
 }
@@ -812,7 +827,6 @@ class _StockDetailState extends State<StockDetail> {
         title: const Center(
           child: Text('Details'),
         ),
-        backgroundColor: Colors.purple,
         leading: BackButton(
           onPressed: () {
             // Navigate back to the first screen by popping the current route
@@ -859,196 +873,280 @@ class _StockDetailState extends State<StockDetail> {
       ),
       // body: stockDetail.checknullValue() ? Center(child: Text('Failed to Fetch Stock Data'))
       //     : _buildContext(stockDetail, compDetail), // for each stock/Company render the view
-      body:  FutureBuilder(
-                future: _getStockInfo(widget.entryDetail.displaySymbol),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (snapshot.data == null) {
-                      return Center(
-                        child: Text("Failed to Fetch Stock Data"),
-                      );
-                    }
-                    if (snapshot.hasData) {
-                      // Extracting data from snapshot object
-                      final info = snapshot.data as InforPage;
-                      return Container(
-                        child: Column(children: <Widget>[
-                          // _buildStockContext(info),
+      body: FutureBuilder(
+        future: _getStockInfo(widget.entryDetail.displaySymbol),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.data == null) {
+              return Center(
+                child: Text("Failed to Fetch Stock Data"),
+              );
+            }
+            if (snapshot.hasData) {
+              // Extracting data from snapshot object
+              final info = snapshot.data as InforPage;
+              var dchangColor = info.dchange > 0.0 ? Colors.green : Colors.red;
+              return Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      // _buildStockContext(info),
+                      Row(
+                        children: [
+                          Text(info.symbol, style: TextStyle(fontSize: 25)),
+                          SizedBox(
+                            width: 25,
+                          ),
+                          Text(info.name,
+                              style:
+                                  TextStyle(fontSize: 25, color: Colors.grey)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        children: [
+                          Text(info.currentPrice.toString(),
+                              style: TextStyle(fontSize: 25)),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(info.dchange.toString(),
+                              style:
+                                  TextStyle(fontSize: 25, color: dchangColor)),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child:
+                                Text("Stats", style: TextStyle(fontSize: 25)),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    child: const Align(
+                                      alignment: Alignment.center,
+                                      child: Text("Open",
+                                          style: const TextStyle(fontSize: 20)),
+                                    ),
+                                  ),
+                                  Container(
+                                      child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                              info.openPriceOfDay.toString(),
+                                              style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 20)))),
+                                  Container(
+                                    child: const Align(
+                                        alignment: Alignment.center,
+                                        child: Text("High",
+                                            style:
+                                                const TextStyle(fontSize: 20))),
+                                  ),
+                                  Container(
+                                      child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            info.highPriceOfDay.toString(),
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 20),
+                                          ))),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "Low",
+                                      style: TextStyle(fontSize: 20),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  )),
+                                  Container(
+                                    child: Align(
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                            info.lowPriceOfDay.toString(),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 20))),
+                                  ),
+                                  Container(
+                                    child: Align(
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          "Prev",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(fontSize: 20),
+                                        )),
+                                  ),
+                                  Container(
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                          info.previousClosePrice.toString(),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 20)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
 
-                          Text(widget.entryDetail.displaySymbol),
-                          // Container(
-                          //     child: Column(
-                          //   children: <Widget>[
-                          //     ListView(
-                          //       children: [
-                          //         // SizeText(info.currentPrice.toString()),
-                          //         // titleSection(info),
-                          //         Text(widget.entryDetail.description),
-                          //
-                          //         // stockPriceSection(info),
-                          //         // stockStatSection(info),
-                          //         // aboutSection(info),
-                          //       ],
-                          //     )
-                          //   ],
-                          // )),
-                          // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
-                        ]),
-                      );
-                    }
-                  }
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                },
-              ),
+                      Column(
+                        children: [
+                          Align(
+                              alignment: Alignment.topLeft,
+                              child: Text("About",
+                                  style: TextStyle(fontSize: 25))),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 120.0,
+                                child: Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Text("Start Date",
+                                        style: TextStyle(fontSize: 14))),
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(info.startDate,
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.grey))),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                  width: 120.0,
+                                  child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text("Industry",
+                                          style: TextStyle(fontSize: 14)))),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(info.industry,
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.grey))),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                  width: 120.0,
+                                  child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text("Website",
+                                          style: TextStyle(fontSize: 14)))),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Align(
+                                alignment: Alignment.topLeft,
+                                child: InkWell(
+                                    child: Text(info.website,
+                                        style: TextStyle(
+                                            fontSize: 14, decoration: TextDecoration.underline, color: Colors.blue)),
+                                    onTap: () =>
+                                        launchUrl(Uri.parse(info.website))),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 120.0,
+                                child: Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Text("Exchange",
+                                        style: TextStyle(fontSize: 14))),
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(info.exchange,
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.grey)))
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 120.0,
+                                child: Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Text("Market Cap",
+                                        style: TextStyle(fontSize: 14))),
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(info.marketCap.toString(),
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.grey))),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ]),
+              );
+            }
+          }
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      ),
     );
-
   }
-}
-
-Widget titleSection(InforPage info) {
-  return Container(
-    padding: const EdgeInsets.all(32),
-    child: Row(
-      children: [
-        Text(info.symbol),
-        Expanded(
-            // Expanded_A
-            child: Column(children: [
-          Expanded(child: SizedBox(height: 200.0, child: Text(info.name))),
-        ])),
-      ],
-    ),
-  );
-}
-
-Widget stockPriceSection(InforPage info) {
-  return Container(
-    padding: const EdgeInsets.all(32),
-    child: Row(
-      children: [
-        Text(info.currentPrice.toString()),
-        const SizedBox(
-          width: 10,
-        ),
-        Text(info.dchange.toString()),
-      ],
-    ),
-  );
-}
-
-Widget stockStatSection(InforPage info) {
-  return Container(
-    padding: const EdgeInsets.all(32),
-    child: Column(
-      children: [
-        Text("Stats"),
-        Column(
-          children: [
-            Row(
-              children: [
-                Text("Open"),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(info.openPriceOfDay.toString()),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text("High"),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(info.highPriceOfDay.toString()),
-              ],
-            ),
-          ],
-        ),
-        Column(
-          children: [
-            Row(
-              children: [
-                Text("Low"),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(info.lowPriceOfDay.toString()),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text("Prev"),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(info.previousClosePrice.toString()),
-              ],
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-Widget aboutSection(InforPage info) {
-  return Container(
-    padding: const EdgeInsets.all(32),
-    child: SizedBox(
-      height: 200, // Some height
-      child: Column(
-        children: [
-          Text("About"),
-          Column(
-            children: [
-              Text("Start Date"),
-              Text(info.startDate),
-            ],
-          ),
-          Column(
-            children: [
-              Text("Industry"),
-              Text(info.industry),
-            ],
-          ),
-          Column(
-            children: [
-              Text("Website"),
-              Text(info.website),
-            ],
-          ),
-          Column(
-            children: [
-              Text("Exchange"),
-              Text(info.exchange),
-            ],
-          ),
-          Column(
-            children: [
-              Text("Market Cap"),
-              Text(info.marketCap.toString()),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-// return three widgets for the list view
-Widget _buildStockContext(InforPage info) {
-  return Container(
-      child: Column(children: <Widget>[
-    Expanded(
-      child: ListView(
-        children: [
-          // SizeText(info.currentPrice.toString()),
-          // titleSection(info),
-          // stockPriceSection(info),
-          // stockStatSection(info),
-          // aboutSection(info),
-        ],
-      ),
-    ),
-  ]));
 }

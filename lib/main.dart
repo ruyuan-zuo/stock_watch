@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: Colors.purple,
+        primarySwatch: Colors.grey,
 
       ),
       home: HomeScreen(),
