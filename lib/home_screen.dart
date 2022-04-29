@@ -467,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Extracting data from snapshot object
                       return Expanded(
-                        child: ListView.builder(
+                        child: ListView.separated(
                             scrollDirection: Axis.vertical,
                             itemCount: data.length,
                             itemBuilder: (context, i) {
@@ -591,7 +591,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ]))),
                               );
-                            }),
+                            },
+                            separatorBuilder: (context, index){
+                              return const Divider(
+                                      thickness: 2,
+                                      color: Colors.white,
+                                    );/* Your separator widget here */;
+                            }
+                        ),
                       );
                     } else if (snapshot.hasError) {
                       return Column(children: const <Widget>[
@@ -898,7 +905,7 @@ class _StockDetailState extends State<StockDetail> {
               // Extracting data from snapshot object
               final info = snapshot.data as InforPage;
               var dchangColor = info.dchange > 0.0 ? Colors.green : Colors.red;
-              String dchangeSign = info.dchange > 0.0 ? "+" : "-";
+              String dchangeSign = info.dchange > 0.0 ? "+" : "";
               return Container(
                 padding: const EdgeInsets.all(20),
                 child: Column(
