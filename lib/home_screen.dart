@@ -948,7 +948,12 @@ class _StockDetailState extends State<StockDetail> {
                           Column(
                             children: [
                               Table(
-
+                                  columnWidths: {
+                                    0: FlexColumnWidth(2),
+                                    1: FlexColumnWidth(4),
+                                    2: FlexColumnWidth(2),
+                                    3: FlexColumnWidth(4),
+                                  },
                                   // textDirection: TextDirection.rtl,
                                   // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
                                   // border:TableBorder.all(width: 2.0,color: Colors.red),
@@ -1001,7 +1006,12 @@ class _StockDetailState extends State<StockDetail> {
                           Column(
                             children: [
                               Table(
-
+                                  columnWidths: {
+                                    0: FlexColumnWidth(2),
+                                    1: FlexColumnWidth(4),
+                                    2: FlexColumnWidth(2),
+                                    3: FlexColumnWidth(4),
+                                  },
                                   // textDirection: TextDirection.rtl,
                                   // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
                                   // border:TableBorder.all(width: 2.0,color: Colors.red),
