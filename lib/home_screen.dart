@@ -44,7 +44,7 @@ class CompanyDetail {
       industry: json["finnhubIndustry"] as String,
       website: json["weburl"] as String,
       exchange: json["exchange"] as String,
-      marketCap: checkDouble(json["marketCapitalization"] ),
+      marketCap: checkDouble(json["marketCapitalization"]),
     );
   }
 }
@@ -58,11 +58,14 @@ double checkDouble(dynamic value) {
 }
 
 int checkInt(dynamic value) {
-  if(value is int) return value;
-  else if(value is double) return value.toInt();
-  else{ return int.parse(value);}
+  if (value is int)
+    return value;
+  else if (value is double)
+    return value.toInt();
+  else {
+    return int.parse(value);
+  }
 }
-
 
 class Stock {
   //https://finnhub.io/api/v1/quote?symbol=symbol&token=c9guatqad3iblo2fo3e0
@@ -98,13 +101,13 @@ class Stock {
 
   factory Stock.fromJson(Map<String, dynamic> json) {
     return Stock(
-      currentPrice: checkDouble(json["c"] ),
+      currentPrice: checkDouble(json["c"]),
       dchange: checkDouble(json["d"]),
-      dpercentChange: checkDouble(json["dp"] ),
-      highPriceOfDay: checkDouble(json["h"] ),
-      lowPriceOfDay: checkDouble(json["l"] ),
-      openPriceOfDay: checkDouble(json["o"] ),
-      previousClosePrice: checkDouble(json["pc"] ),
+      dpercentChange: checkDouble(json["dp"]),
+      highPriceOfDay: checkDouble(json["h"]),
+      lowPriceOfDay: checkDouble(json["l"]),
+      openPriceOfDay: checkDouble(json["o"]),
+      previousClosePrice: checkDouble(json["pc"]),
       t: checkInt(json["t"]),
     );
   }
@@ -876,9 +879,7 @@ class _StockDetailState extends State<StockDetail> {
                 updateFavListInMem(encodedData);
               });
             },
-            icon: isInFavList
-                ? Icon(Icons.star)
-                : Icon(Icons.star_border),
+            icon: isInFavList ? Icon(Icons.star) : Icon(Icons.star_border),
           ),
         ],
       ),
@@ -897,6 +898,7 @@ class _StockDetailState extends State<StockDetail> {
               // Extracting data from snapshot object
               final info = snapshot.data as InforPage;
               var dchangColor = info.dchange > 0.0 ? Colors.green : Colors.red;
+              String dchangeSign = info.dchange > 0.0 ? "+" : "-";
               return Container(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -925,7 +927,7 @@ class _StockDetailState extends State<StockDetail> {
                           const SizedBox(
                             width: 10,
                           ),
-                          Text(info.dchange.toString(),
+                          Text(dchangeSign+ info.dchange.toString(),
                               style:
                                   TextStyle(fontSize: 25, color: dchangColor)),
                         ],
@@ -945,107 +947,110 @@ class _StockDetailState extends State<StockDetail> {
                           ),
                           Column(
                             children: [
-                          Table(
+                              Table(
 
-                          // textDirection: TextDirection.rtl,
-                          // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
-                          // border:TableBorder.all(width: 2.0,color: Colors.red),
-                          children: [
-          TableRow(
-          children: [
-                                  Container(
-                                    child: const Align(
-                                      alignment: Alignment.center,
-                                      child: Text("Open",                                          textAlign: TextAlign.center,
-
-                                          style: const TextStyle(fontSize: 20)),
-                                    ),
-                                  ),
-                                  Container(
-                                      child: Align(
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                              info.openPriceOfDay.toString(),
-                                              textAlign: TextAlign.center,
-
-                                              style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 18)))),
-                                  Container(
-                                    child: const Align(
-                                        alignment: Alignment.center,
-                                        child: Text("High",
-                                            textAlign: TextAlign.center,
-
-                                            style:
-                                                const TextStyle(fontSize: 20))),
-                                  ),
-                                  Container(
-                                      child: Align(
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            info.highPriceOfDay.toString(),
-                                            textAlign: TextAlign.center,
-
-                                            style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 18),
-                                          ))),
-                                ],)]
-                              ),
+                                  // textDirection: TextDirection.rtl,
+                                  // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
+                                  // border:TableBorder.all(width: 2.0,color: Colors.red),
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        Container(
+                                          child: const Align(
+                                            alignment: Alignment.center,
+                                            child: Text("Open",
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                    fontSize: 20)),
+                                          ),
+                                        ),
+                                        Container(
+                                            child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                    info.openPriceOfDay
+                                                        .toString(),
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: 18)))),
+                                        Container(
+                                          child: const Align(
+                                              alignment: Alignment.center,
+                                              child: Text("High",
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                      fontSize: 20))),
+                                        ),
+                                        Container(
+                                            child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  info.highPriceOfDay
+                                                      .toString(),
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 18),
+                                                ))),
+                                      ],
+                                    )
+                                  ]),
                             ],
                           ),
                           Column(
                             children: [
-          Table(
+                              Table(
 
-          // textDirection: TextDirection.rtl,
-          // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
-          // border:TableBorder.all(width: 2.0,color: Colors.red),
-          children: [
-          TableRow(
-          children: [
-                                  Container(
-                                      child: Align(
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "Low",
-                                      style: TextStyle(fontSize: 20),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  )),
-                                  Container(
-                                    child: Align(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                            info.lowPriceOfDay.toString(),
+                                  // textDirection: TextDirection.rtl,
+                                  // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
+                                  // border:TableBorder.all(width: 2.0,color: Colors.red),
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        Container(
+                                            child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            "Low",
+                                            style: TextStyle(fontSize: 20),
                                             textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 18))),
-                                  ),
-                                  Container(
-                                    child: Align(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          "Prev",
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(fontSize: 20),
+                                          ),
                                         )),
-                                  ),
-                                  Container(
-                                    child: Align(
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                          info.previousClosePrice.toString(),
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 18)),
-                                    ),
-                                  ),
-                                ],)]
-                              ),
+                                        Container(
+                                          child: Align(
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                  info.lowPriceOfDay.toString(),
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 18))),
+                                        ),
+                                        Container(
+                                          child: Align(
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                "Prev",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(fontSize: 20),
+                                              )),
+                                        ),
+                                        Container(
+                                          child: Align(
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                                info.previousClosePrice
+                                                    .toString(),
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 18)),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ]),
                             ],
                           ),
                         ],
@@ -1116,7 +1121,10 @@ class _StockDetailState extends State<StockDetail> {
                                 child: InkWell(
                                     child: Text(info.website,
                                         style: TextStyle(
-                                            fontSize: 14, decoration: TextDecoration.underline, color: Colors.blue)),
+                                            fontSize: 14,
+                                            decoration:
+                                                TextDecoration.underline,
+                                            color: Colors.blue)),
                                     onTap: () =>
                                         launchUrl(Uri.parse(info.website))),
                               ),
