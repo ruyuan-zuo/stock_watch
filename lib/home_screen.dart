@@ -276,15 +276,6 @@ Future<CompanyDetail?> fetchCompDetail(String compSymbol) async {
   }
 }
 
-/*
-block function sto load fav list ;
- */
-// late final SharedPreferences prefs;
-//
-// void loadSharedPref() async{
-//    prefs = await SharedPreferences.getInstance();
-// }
-// List<SearchEntry> favlists =[];
 
 final String asySharedKey = "stock";
 
@@ -442,10 +433,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 25, fontWeight: FontWeight.bold))),
                 ],
               ),
-              SizedBox(height: 2),
+              SizedBox(height: 20),
 
               Text("Favorites", style: TextStyle(fontSize: 20)),
+              SizedBox(height: 20),
+
+
               Divider(thickness: 2, color: Colors.white),
+              SizedBox(height: 20),
+
               // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
               FutureBuilder(
                 future: Fu,
@@ -455,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (snapshot.connectionState == ConnectionState.done) {
                     // If we got an error
 
-                    if (Fu == null) {
+                    if (Fu == null  ) {
                       return Center(
                         child: Text("Empty",
                             style: TextStyle(
@@ -464,7 +460,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       // if we got our data
                     } else if (snapshot.hasData) {
                       final data = snapshot.data as List<SearchEntry>;
-
+                      if (data.length == 0  ) {
+                        return Center(
+                          child: Text("Empty",
+                              style: TextStyle(
+                                  fontSize: 25, fontWeight: FontWeight.bold)),
+                        );
+                        // if we got our data
+                      }
                       // Extracting data from snapshot object
                       return Expanded(
                         child: ListView.separated(
@@ -516,9 +519,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                             "Are you sure you want to delete this item?"),
                                         actions: <Widget>[
                                           TextButton(
-                                              onPressed: () =>
+                                              onPressed: () {
                                                   Navigator.of(context)
-                                                      .pop(true),
+                                                      .pop(true);
+                                              },
                                               child: const Text("Delete")),
                                           TextButton(
                                             onPressed: () =>
@@ -529,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ],
                                       );
                                     },
-                                  );
+                                  );;
                                 },
                                 // Provide a function that tells the app
                                 // what to do after an item has been swiped away.
@@ -545,6 +549,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     // print("line 460" + encodedData);
                                     // print("\n");
                                     updateFavListInMem(encodedData);
+                                    update();
+
                                     // now trigger rebuild, with new Fu = new list of item in mem
                                   });
                                 },
