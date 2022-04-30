@@ -182,7 +182,7 @@ class CompeletSearch {
 
   factory CompeletSearch.fromJson(Map<String, dynamic> parsedJson) {
     var list = parsedJson['result'] as List;
-    print(list.runtimeType); //returns List<dynamic>
+    // print(list.runtimeType); //returns List<dynamic>
     List<SearchEntry> entryList =
         list.map((i) => SearchEntry.fromJson(i)).toList();
     return CompeletSearch(number: parsedJson['count'], listOfRes: entryList);
@@ -199,7 +199,7 @@ Future<CompeletSearch> fetchSearchList(String url_sub) async {
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      print(response.body);
+      // print(response.body);
       return CompeletSearch.fromJson(jsonDecode(response.body));
     } else {
       // If the server did not return a 200 OK response,
@@ -239,7 +239,7 @@ Future<Stock?> fetchCompStock(String compSymbol) async {
       throw Exception('Failed to load');
     }
   } catch (e) {
-    print(e);
+    // print(e);
     return null;
     throw Exception(e.toString());
   }
@@ -263,7 +263,7 @@ Future<CompanyDetail?> fetchCompDetail(String compSymbol) async {
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      print(response.body);
+      // print(response.body);
       return CompanyDetail.fromJson(jsonDecode(response.body));
     } else {
       // If the server did not return a 200 OK response,
@@ -294,14 +294,14 @@ addStringToSF(val) async {
   String? stringValue = prefs.getString(asySharedKey);
 
   await prefs.setString(asySharedKey, val);
-  print("updated prefs: " + val);
+  // print("updated prefs: " + val);
 }
 
 Future<String?> getStringValuesSF() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   //Return String
 
-  print(prefs.getString(asySharedKey));
+  // print(prefs.getString(asySharedKey));
 
   String? stringValue = prefs.getString(asySharedKey);
   if (stringValue == null) {
@@ -342,8 +342,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<SearchEntry>> _getSharedPref() async {
     String? stockEntryString = await getStringValuesSF();
-    print("get=" + stockEntryString!);
-    Fu = decode(stockEntryString); // updates our global favlists gives s list
+    // print("get=" + stockEntryString!);
+    Fu = decode(stockEntryString!); // updates our global favlists gives s list
     return Fu;
   }
 
@@ -355,8 +355,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void removeEntryFromFavList(List<SearchEntry> list, String symbol) {
     int index = list.indexWhere((element) => element.displaySymbol == symbol);
-    print(index);
-    print(list[index]);
+    // print(index);
+    // print(list[index]);
     list.removeAt(index);
   }
 
@@ -482,8 +482,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               // }
                               // final index = i ~/ 2; /*3*/
                               final index = i; /*3*/
-                              print(index);
-                              print(i);
+                              // print(index);
+                              // print(i);
                               // print(data.length);
 
                               final item = data[index];
@@ -542,8 +542,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     // update in memery storey
                                     final String encodedData =
                                         SearchEntry.encode(data);
-                                    print("line 460" + encodedData);
-                                    print("\n");
+                                    // print("line 460" + encodedData);
+                                    // print("\n");
                                     updateFavListInMem(encodedData);
                                     // now trigger rebuild, with new Fu = new list of item in mem
                                   });
@@ -600,7 +600,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                         ),
                       );
-                    } else if (snapshot.hasError) {
+                    }
+                    else  {
                       return Column(children: const <Widget>[
                         SizedBox(height: 10),
                         Center(
@@ -673,15 +674,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final myController = TextEditingController();
 
-  // String q = "";
-  // @override
-  // void dispose() {
-  //   // Clean up the controller when the widget is disposed.
-  //   myController.dispose();
-  //   super.dispose();
-  // }
-  // late Future<CompeletSearch> searchRes;
   List<SearchEntry> searchEntries = [];
+  // StreamController<List<SearchEntry>> _searchEntryStream;
 
   void sendSearchResults(String query) {
     // print(query);
@@ -691,6 +685,8 @@ class _SearchScreenState extends State<SearchScreen> {
         searchEntries = result.listOfRes;
       });
     });
+    // _searchEntryStream.add(searchEntries);
+
     // print(futureAlbum);
   }
 
@@ -725,7 +721,8 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
       ),
-      body: searchEntries.isEmpty
+      body:
+      searchEntries.isEmpty
           ? Center(
               child:
                   Text('No suggestions Found!', style: TextStyle(fontSize: 22)))
@@ -796,8 +793,8 @@ class _StockDetailState extends State<StockDetail> {
     int index =
         favList.indexWhere((element) => element.displaySymbol == symbol);
 
-    print(index);
-    print(favList[index]);
+    // print(index);
+    // print(favList[index]);
     favList.removeAt(index);
   }
 
@@ -881,8 +878,8 @@ class _StockDetailState extends State<StockDetail> {
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
                 final String encodedData = SearchEntry.encode(favList);
-                print(encodedData);
-                print("\n");
+                // print(encodedData);
+                // print("\n");
                 updateFavListInMem(encodedData);
               });
             },
@@ -898,7 +895,7 @@ class _StockDetailState extends State<StockDetail> {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.data == null) {
               return Center(
-                child: Text("Failed to Fetch Stock Data"),
+                child: Text("Failed to Fetch Stock Data", style: TextStyle(fontSize: 22)),
               );
             }
             if (snapshot.hasData) {
