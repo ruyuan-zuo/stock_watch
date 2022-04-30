@@ -276,7 +276,6 @@ Future<CompanyDetail?> fetchCompDetail(String compSymbol) async {
   }
 }
 
-
 final String asySharedKey = "stock";
 
 addStringToSF(val) async {
@@ -301,12 +300,6 @@ Future<String?> getStringValuesSF() async {
   return stringValue;
 }
 
-// List<SearchEntry> decode(String musics) {
-//   return (json.decode(musics) as List<dynamic>)
-//       .map<SearchEntry>((item) => SearchEntry.fromJson(item))
-//       .toList();
-// }
-
 Future<List<SearchEntry>> decode(String entries) async {
   return (json.decode(entries) as List<dynamic>)
       .map<SearchEntry>((item) => SearchEntry.fromJson(item))
@@ -321,14 +314,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Future<List<SearchEntry>> _getSharedPref() async {
-  //
-  //   String? stockEntryString = await getStringValuesSF();
-  //   // print(stockEntryString);
-  //   favlists = await decode(stockEntryString!);
-  //   return favlists;
-  //
-  // }
   late Future<List<SearchEntry>> Fu;
 
   Future<List<SearchEntry>> _getSharedPref() async {
@@ -384,20 +369,11 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             IconButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SearchScreen(),
-                    // Pass the arguments as part of the RouteSettings. The
-                    // DetailScreen reads the arguments from these settings.
-                    // settings: RouteSettings(
-                    //   arguments: compList[index],
-                    // ),
-                  ),
-                ).then((value) {
+                showSearch(context: context, delegate: StockSearchDel())
+                    .then((value) {
                   update();
                 });
-                ;
+                // update();
               },
               icon: Icon(Icons.search),
             ),
@@ -438,9 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text("Favorites", style: TextStyle(fontSize: 20)),
               SizedBox(height: 20),
 
-
               Divider(thickness: 2, color: Colors.white),
-              SizedBox(height: 20),
 
               // favlists.length == 0? Text("FAVES") : renderFavList(favlists),
               FutureBuilder(
@@ -451,21 +425,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (snapshot.connectionState == ConnectionState.done) {
                     // If we got an error
 
-                    if (Fu == null  ) {
-                      return Center(
-                        child: Text("Empty",
-                            style: TextStyle(
-                                fontSize: 25, fontWeight: FontWeight.bold)),
-                      );
-                      // if we got our data
-                    } else if (snapshot.hasData) {
-                      final data = snapshot.data as List<SearchEntry>;
-                      if (data.length == 0  ) {
-                        return Center(
+                    if (Fu == null) {
+                      return Column(children: const <Widget>[
+                        SizedBox(height: 20),
+                        Center(
                           child: Text("Empty",
                               style: TextStyle(
                                   fontSize: 25, fontWeight: FontWeight.bold)),
-                        );
+                        ),
+                      ]);
+                      // if we got our data
+                    } else if (snapshot.hasData) {
+                      final data = snapshot.data as List<SearchEntry>;
+                      if (data.length == 0) {
+                        return Column(children: const <Widget>[
+                          SizedBox(height: 20),
+                          Center(
+                            child: Text("Empty",
+                                style: TextStyle(
+                                    fontSize: 25, fontWeight: FontWeight.bold)),
+                          ),
+                        ]);
                         // if we got our data
                       }
                       // Extracting data from snapshot object
@@ -520,8 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         actions: <Widget>[
                                           TextButton(
                                               onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pop(true);
+                                                Navigator.of(context).pop(true);
                                               },
                                               child: const Text("Delete")),
                                           TextButton(
@@ -533,7 +512,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ],
                                       );
                                     },
-                                  );;
+                                  );
+                                  ;
                                 },
                                 // Provide a function that tells the app
                                 // what to do after an item has been swiped away.
@@ -598,16 +578,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ]))),
                               );
                             },
-                            separatorBuilder: (context, index){
+                            separatorBuilder: (context, index) {
                               return const Divider(
-                                      thickness: 2,
-                                      color: Colors.white,
-                                    );/* Your separator widget here */;
-                            }
-                        ),
+                                thickness: 2,
+                                color: Colors.white,
+                              );
+                              /* Your separator widget here */;
+                            }),
                       );
-                    }
-                    else  {
+                    } else {
                       return Column(children: const <Widget>[
                         SizedBox(height: 10),
                         Center(
@@ -637,39 +616,6 @@ Future<List<SearchEntry>> getFavList() async {
   return favlists;
 }
 
-Widget _builContent(List<SearchEntry> searchEntries) {
-  // CompanyDetail compD = compList[index];
-
-  return ListView.builder(
-    itemCount: searchEntries.length,
-    itemBuilder: (context, index) {
-      return ListTile(
-        title: Text(searchEntries[index].displaySymbol +
-            " | " +
-            searchEntries[index].description),
-        // When a user taps the ListTile, navigate to the DetailScreen.
-        // Notice that you're not only creating a DetailScreen, you're
-        // also passing the current
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => StockDetail(
-                entryDetail: searchEntries[index],
-              ),
-              // Pass the arguments as part of the RouteSettings. The
-              // DetailScreen reads the arguments from these settings.
-              // settings: RouteSettings(
-              //   arguments: compList[index],
-              // ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
 
@@ -677,11 +623,149 @@ class SearchScreen extends StatefulWidget {
   _SearchScreenState createState() => _SearchScreenState();
 }
 
+class StockSearchDel extends SearchDelegate<SearchEntry?> {
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    return ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.grey,
+        scaffoldBackgroundColor: Colors.black,
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Colors.purple,
+        ));
+  }
+
+  Future<List<SearchEntry>>? _getLisOfRes(String query) async {
+    CompeletSearch compSear = await fetchSearchList(query);
+    List<SearchEntry> searchEntries =
+        compSear == null ? [] : compSear.listOfRes;
+    return searchEntries;
+  }
+
+  @override
+  List<Widget> buildActions(BuildContext context) => [
+        IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () {
+            if (query.isEmpty) {
+              close(context, null);
+            } else {
+              query = '';
+              showSuggestions(context);
+            }
+          },
+        )
+      ];
+
+  @override
+  Widget buildLeading(BuildContext context) => IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () => close(context, null),
+      );
+
+  Widget buildSugSuccess(List<SearchEntry> entries) {
+    return ListView.builder(
+      itemCount: entries.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(entries[index].displaySymbol +
+              " | " +
+              entries[index].description),
+          // When a user taps the ListTile, navigate to the DetailScreen.
+          // Notice that you're not only creating a DetailScreen, you're
+          // also passing the current
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => StockDetail(
+                  entryDetail: entries[index],
+                ),
+                // Pass the arguments as part of the RouteSettings. The
+                // DetailScreen reads the arguments from these settings.
+                // settings: RouteSettings(
+                //   arguments: compList[index],
+                // ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /*
+        build the suggestions with a list view
+   */
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    if (query.isEmpty) {
+      return Container(
+        color: Colors.black,
+        alignment: Alignment.center,
+        child: Text(
+          'No suggestions Found!',
+          style: TextStyle(fontSize: 28, color: Colors.white),
+        ),
+      );
+    } else {
+      return FutureBuilder<List<SearchEntry>>(
+          future: _getLisOfRes(query),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData && snapshot.data != null) {
+                final data = snapshot.data as List<SearchEntry>;
+                if (data.length == 0)
+                  return Container(
+                    color: Colors.black,
+                    alignment: Alignment.center,
+                    child: Text(
+                      'No suggestions Found!',
+                      style: TextStyle(fontSize: 28, color: Colors.white),
+                    ),
+                  );
+                return buildSugSuccess(data);
+              } else {
+                return Container(
+                  color: Colors.black,
+                  alignment: Alignment.center,
+                  child: Text(
+                    'No suggestions Found!',
+                    style: TextStyle(fontSize: 28, color: Colors.white),
+                  ),
+                );
+              }
+            }
+            return Center(
+                child: CircularProgressIndicator(
+              valueColor: new AlwaysStoppedAnimation<Color>(Colors.purple),
+            ));
+          });
+      ;
+    }
+  }
+
+  /*
+     Result part
+   */
+  @override
+  Widget buildResults(BuildContext context) {
+    // TODO: implement buildResults
+    return Container(
+      color: Colors.black,
+      alignment: Alignment.center,
+      child: Text(
+        'No suggestions Found',
+        style: TextStyle(fontSize: 28, color: Colors.white),
+      ),
+    );
+  }
+}
+
 class _SearchScreenState extends State<SearchScreen> {
   final myController = TextEditingController();
 
   List<SearchEntry> searchEntries = [];
-  // StreamController<List<SearchEntry>> _searchEntryStream;
 
   void sendSearchResults(String query) {
     // print(query);
@@ -705,34 +789,36 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext) {
     return Scaffold(
       appBar: AppBar(
-        title: Container(
-          child: Center(
-            child: TextField(
-              onChanged: (value) {
-                sendSearchResults(value);
-              },
-              controller: myController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () {
-                    myController.clear();
-                  },
-                ),
-                hintText: 'Search',
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ),
+        actions: [
+          IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                final result =
+                    showSearch(context: context, delegate: StockSearchDel());
+              }),
+        ],
+        // title: Container(
+        //   child: Center(
+        //     child: TextField(
+        //       onChanged: (value) {
+        //         sendSearchResults(value);
+        //       },
+        //       controller: myController,
+        //       decoration: InputDecoration(
+        //         prefixIcon: Icon(Icons.search),
+        //         suffixIcon: IconButton(
+        //           icon: Icon(Icons.clear),
+        //           onPressed: () {
+        //             myController.clear();
+        //           },
+        //         ),
+        //         hintText: 'Search',
+        //         border: InputBorder.none,
+        //       ),
+        //     ),
+        //   ),
+        // ),
       ),
-      body:
-      searchEntries.isEmpty
-          ? Center(
-              child:
-                  Text('No suggestions Found!', style: TextStyle(fontSize: 22)))
-          : _builContent(searchEntries),
     );
   }
 }
@@ -901,7 +987,8 @@ class _StockDetailState extends State<StockDetail> {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.data == null) {
               return Center(
-                child: Text("Failed to Fetch Stock Data", style: TextStyle(fontSize: 22)),
+                child: Text("Failed to Fetch Stock Data",
+                    style: TextStyle(fontSize: 22)),
               );
             }
             if (snapshot.hasData) {
@@ -937,7 +1024,7 @@ class _StockDetailState extends State<StockDetail> {
                           const SizedBox(
                             width: 10,
                           ),
-                          Text(dchangeSign+ info.dchange.toString(),
+                          Text(dchangeSign + info.dchange.toString(),
                               style:
                                   TextStyle(fontSize: 25, color: dchangColor)),
                         ],
@@ -957,13 +1044,12 @@ class _StockDetailState extends State<StockDetail> {
                           ),
                           Column(
                             children: [
-                              Table(
-                                  columnWidths: {
-                                    0: FlexColumnWidth(2),
-                                    1: FlexColumnWidth(4),
-                                    2: FlexColumnWidth(2),
-                                    3: FlexColumnWidth(4),
-                                  },
+                              Table(columnWidths: {
+                                0: FlexColumnWidth(2),
+                                1: FlexColumnWidth(4),
+                                2: FlexColumnWidth(2),
+                                3: FlexColumnWidth(4),
+                              },
                                   // textDirection: TextDirection.rtl,
                                   // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
                                   // border:TableBorder.all(width: 2.0,color: Colors.red),
@@ -1015,13 +1101,12 @@ class _StockDetailState extends State<StockDetail> {
                           ),
                           Column(
                             children: [
-                              Table(
-                                  columnWidths: {
-                                    0: FlexColumnWidth(2),
-                                    1: FlexColumnWidth(4),
-                                    2: FlexColumnWidth(2),
-                                    3: FlexColumnWidth(4),
-                                  },
+                              Table(columnWidths: {
+                                0: FlexColumnWidth(2),
+                                1: FlexColumnWidth(4),
+                                2: FlexColumnWidth(2),
+                                3: FlexColumnWidth(4),
+                              },
                                   // textDirection: TextDirection.rtl,
                                   // defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
                                   // border:TableBorder.all(width: 2.0,color: Colors.red),
